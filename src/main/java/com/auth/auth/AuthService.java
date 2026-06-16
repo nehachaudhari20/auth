@@ -6,6 +6,11 @@ import com.auth.user.User;
 import com.auth.user.UserRepository;
 import com.auth.user.UserService;
 import lombok.RequiredArgsConstructor;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +22,26 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public void signup(SignupRequest request) {
         userService.createUser(request);
     }
+    private RefreshToken createRefreshToken(User user) {
 
+    RefreshToken refreshToken =
+            RefreshToken.builder()
+                    .id(UUID.randomUUID())
+                    .user(user)
+                    .token(UUID.randomUUID().toString())
+                    .createdAt(Instant.now())
+                    .expiresAt(
+                            Instant.now().plus(7, ChronoUnit.DAYS)
+                    )
+                    .build();
+
+    return refreshTokenRepository.save(refreshToken);
+}
     public AuthResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.email())
@@ -35,8 +55,12 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        String accessToken = jwtService.generateToken(user.getEmail());
 
-        return new AuthResponse(token);
+        RefreshToken refreshToken = createRefreshToken(user);
+
+        return new AuthResponse(
+                accessToken,
+                refreshToken.getToken());
     }
 }
