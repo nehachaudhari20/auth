@@ -11,6 +11,7 @@ import java.util.UUID;
 public class AuditService {
 
     private final AuditLogRepository auditLogRepository;
+    
 
     public void log(
             String email,
