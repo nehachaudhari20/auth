@@ -9,4 +9,6 @@ public interface SessionRepository
         extends JpaRepository<Session, UUID> {
 
     List<Session> findByUserId(UUID userId);
+
+    List<Session> findByUser(User user);
 }

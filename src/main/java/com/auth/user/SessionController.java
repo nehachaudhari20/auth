@@ -17,6 +17,7 @@ public class SessionController {
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    
 
     @GetMapping
     public List<Session> getSessions(
@@ -43,5 +44,24 @@ public class SessionController {
                 session.getRefreshToken());
 
         sessionRepository.delete(session);
+    }
+    @DeleteMapping("/all")
+    public void deleteAllSessions(
+            Authentication authentication) {
+
+        User user = userRepository
+                .findByEmail(
+                        authentication.getName())
+                .orElseThrow();
+
+        List<Session> sessions = sessionRepository.findByUser(user);
+
+        for (Session session : sessions) {
+
+            refreshTokenRepository.delete(
+                    session.getRefreshToken());
+
+            sessionRepository.delete(session);
+        }
     }
 }
