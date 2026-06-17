@@ -41,15 +41,15 @@ public class SessionController {
                 .findById(sessionId)
                 .orElseThrow();
 
+        auditService.log(
+                session.getUser().getEmail(),
+                "SESSION_REVOKED",
+                "Session terminated");
+
         refreshTokenRepository.delete(
                 session.getRefreshToken());
 
         sessionRepository.delete(session);
-
-        auditService.log(
-                authentication.getName(),
-                "SESSION_REVOKED",
-                "Session deleted");
     }
 
     @DeleteMapping("/all")
@@ -72,7 +72,7 @@ public class SessionController {
         }
 
         auditService.log(
-                authentication.getName(),
+                user.getEmail(),
                 "LOGOUT_ALL",
                 "All sessions revoked");
     }
