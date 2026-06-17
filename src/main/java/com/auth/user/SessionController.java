@@ -4,7 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.auth.auth.RefreshTokenRepository;
+
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/sessions")
@@ -13,6 +16,7 @@ public class SessionController {
 
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @GetMapping
     public List<Session> getSessions(
@@ -25,5 +29,19 @@ public class SessionController {
 
         return sessionRepository.findByUserId(
                 user.getId());
+    }
+
+    @DeleteMapping("/{sessionId}")
+    public void deleteSession(
+            @PathVariable UUID sessionId) {
+
+        Session session = sessionRepository
+                .findById(sessionId)
+                .orElseThrow();
+
+        refreshTokenRepository.delete(
+                session.getRefreshToken());
+
+        sessionRepository.delete(session);
     }
 }
