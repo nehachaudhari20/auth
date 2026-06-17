@@ -1,6 +1,8 @@
 package com.auth.auth;
 
 import com.auth.security.JwtService;
+import com.auth.user.Session;
+import com.auth.user.SessionRepository;
 import com.auth.user.SignupRequest;
 import com.auth.user.User;
 import com.auth.user.UserRepository;
@@ -23,6 +25,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final SessionRepository sessionRepository;
     
 
     public void signup(SignupRequest request) {
@@ -59,6 +62,7 @@ public class AuthService {
         String accessToken = jwtService.generateToken(user.getEmail(), user.getRole().name());
 
         RefreshToken refreshToken = createRefreshToken(user);
+        createSession(user,refreshToken);
 
         return new AuthResponse(
                 accessToken,
@@ -88,5 +92,22 @@ public class AuthService {
         return new AuthResponse(
                 accessToken,
                 refreshToken.getToken());
+    }
+
+    private void createSession(
+            User user,
+            RefreshToken refreshToken) {
+
+        Session session = Session.builder()
+                .id(UUID.randomUUID())
+                .user(user)
+                .refreshToken(refreshToken)
+                .deviceName("Postman")
+                .ipAddress("127.0.0.1")
+                .createdAt(Instant.now())
+                .lastActiveAt(Instant.now())
+                .build();
+
+        sessionRepository.save(session);
     }
 }
