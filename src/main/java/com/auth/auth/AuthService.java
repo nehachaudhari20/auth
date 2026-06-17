@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-
+import java.time.Instant;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +23,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
+    
 
     public void signup(SignupRequest request) {
         userService.createUser(request);
@@ -58,6 +59,32 @@ public class AuthService {
         String accessToken = jwtService.generateToken(user.getEmail());
 
         RefreshToken refreshToken = createRefreshToken(user);
+
+        return new AuthResponse(
+                accessToken,
+                refreshToken.getToken());
+    }
+
+    public AuthResponse refreshToken(
+            RefreshTokenRequest request) {
+
+        RefreshToken refreshToken = refreshTokenRepository
+                .findByToken(
+                        request.refreshToken())
+                .orElseThrow(() -> new RuntimeException(
+                        "Invalid refresh token"));
+
+        if (refreshToken.getExpiresAt()
+                .isBefore(Instant.now())) {
+
+            throw new RuntimeException(
+                    "Refresh token expired");
+        }
+
+        String accessToken = jwtService.generateToken(
+                refreshToken
+                        .getUser()
+                        .getEmail());
 
         return new AuthResponse(
                 accessToken,
