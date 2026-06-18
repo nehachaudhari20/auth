@@ -12,3 +12,4 @@ public interface OAuthAccountRepository
             String provider,
             String providerUserId);
 }
+
