@@ -10,19 +10,25 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.auth.oauth.OAuthSuccessHandler;
+
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final OAuthSuccessHandler oauthSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http) throws Exception {
+                
 
         return http
                 .csrf(csrf -> csrf.disable())
+                        .oauth2Login(oauth -> oauth.successHandler(
+                                        oauthSuccessHandler))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -43,5 +49,6 @@ public class SecurityConfig {
                 )
                 .httpBasic(Customizer.withDefaults())
                 .build();
+                
     }
 }
